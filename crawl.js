@@ -1,3 +1,5 @@
+const { JSDOM } = require('jsdom')
+
 function normalizeURL(url){
   const urlObj = new URL(url)
   const domainPath = `${urlObj.hostname}${urlObj.pathname}`
@@ -7,6 +9,33 @@ function normalizeURL(url){
   return domainPath
 }
 
+function getURLsFromHTML(body, baseUrl){
+  const urls = []
+  const dom = new JSDOM(body)
+  const links = dom.window.document.querySelectorAll('a')
+  for(const link of links){
+    if(link.href.slice(0, 1) === '/'){
+     try{
+      const urlObj = new URL(`${baseUrl}${link.href}`)
+      urls.push(urlObj.href)
+     }catch(e){
+      console.log(`invalid url for relative path ${e.message}`)
+     }
+    }else{
+      try{
+        const urlObj = new URL(link.href)
+        urls.push(urlObj.href)
+       }catch(e){
+        console.log(`invalid url for absolute path ${e.message}`)
+       }
+      
+    }
+   
+  }
+  return urls
+}
+
 module.exports = {
-    normalizeURL
+    normalizeURL,
+    getURLsFromHTML
   }
